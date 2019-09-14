@@ -1,0 +1,5 @@
+rootProject.name = 'protoc-gen-spring-web'
+
+include 'generator'
+include 'runtime'
+include 'example'

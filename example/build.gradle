@@ -1,0 +1,59 @@
+plugins {
+    id "com.google.protobuf" version "0.8.10"
+    id "java"
+    id "idea"
+}
+
+group 'org.sapzil.protobuf'
+version '1.0-SNAPSHOT'
+
+sourceCompatibility = 1.8
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compile 'com.google.protobuf:protobuf-java:3.9.1'
+    compile 'com.google.protobuf:protobuf-java-util:3.9.1'
+    compile 'com.google.api.grpc:proto-google-common-protos:1.16.0'
+    compile 'org.springframework.boot:spring-boot-starter-web:2.1.6.RELEASE'
+    compile 'org.reactivestreams:reactive-streams:1.0.3'
+    compile project(':runtime')
+    testCompile group: 'junit', name: 'junit', version: '4.12'
+}
+
+protobuf {
+    protoc {
+        artifact = "com.google.protobuf:protoc:3.9.1"
+    }
+    plugins {
+        spring_web {
+            path = "${project.rootDir}/generator/build/install/generator/bin/generator.bat"
+        }
+    }
+    generateProtoTasks {
+        all()*.plugins {
+            spring_web {
+                outputSubDir = 'java'
+            }
+        }
+        all().each { task ->
+            task.outputs.upToDateWhen { false }
+        }
+    }
+}
+
+idea {
+    module {
+        sourceDirs += file("${projectDir}/src/main/proto")
+    }
+}
+
+sourceSets {
+    main {
+        java {
+            srcDir 'build/generated/source/proto/main/java'
+        }
+    }
+}
