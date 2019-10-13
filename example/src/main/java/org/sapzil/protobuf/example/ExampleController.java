@@ -1,13 +1,8 @@
 package org.sapzil.protobuf.example;
 
-import com.google.protobuf.Empty;
 import com.google.showcase.v1beta1.CreateUserRequest;
-import com.google.showcase.v1beta1.DeleteUserRequest;
 import com.google.showcase.v1beta1.GetUserRequest;
 import com.google.showcase.v1beta1.IdentityRpc;
-import com.google.showcase.v1beta1.ListUsersRequest;
-import com.google.showcase.v1beta1.ListUsersResponse;
-import com.google.showcase.v1beta1.UpdateUserRequest;
 import com.google.showcase.v1beta1.User;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -28,23 +23,5 @@ public class ExampleController implements IdentityRpc.Controller {
     @Override
     public User getUser(GetUserRequest request) {
         return users.get(request.getName());
-    }
-
-    @Override
-    public User updateUser(UpdateUserRequest request) {
-        return null;
-    }
-
-    @Override
-    public Empty deleteUser(DeleteUserRequest request) {
-        users.remove(request.getName());
-        return Empty.getDefaultInstance();
-    }
-
-    @Override
-    public ListUsersResponse listUsers(ListUsersRequest request) {
-        return ListUsersResponse.newBuilder()
-                .addAllUsers(users.values())
-                .build();
     }
 }

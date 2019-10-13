@@ -1,6 +1,5 @@
 package org.sapzil.protobuf
 
-import com.google.api.AnnotationsProto
 import com.google.common.base.CaseFormat
 import com.google.protobuf.Descriptors
 import com.google.protobuf.ExtensionRegistry
@@ -57,10 +56,9 @@ class SpringWebGenerator : CodeGenerator() {
                 className(method.outputType)
             }
             val lowerMethodName = CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_CAMEL, method.name)
-            val httpAnnotation = method.options.getExtension(AnnotationsProto.http)
-            val path = if (httpAnnotation.post.isNotEmpty()) {
-                // TODO: handle more HTTP methods
-                httpAnnotation.post
+            val overridesAnnotation = method.options.getExtension(AnnotationsProto.overrides)
+            val path = if (overridesAnnotation.path.isNotEmpty()) {
+                overridesAnnotation.path
             } else {
                 "/${service.fullName}/${method.name}"
             }
