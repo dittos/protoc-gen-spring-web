@@ -7,22 +7,38 @@ import java.io.StringWriter
 import java.io.Writer
 
 class SpringWebGenerator : CodeGenerator() {
+    data class Options(
+        val context_type: String?
+    )
+
     override fun registerAllExtensions(registry: ExtensionRegistry) {
         AnnotationsProto.registerAllExtensions(registry)
     }
 
     override fun generate(file: Descriptors.FileDescriptor, parameter: String, generatorContext: GeneratorResponseContext) {
+        val parameters = parameter.split(",").associate {
+            val kv = it.split("=", limit = 2)
+            if (kv.size == 2) {
+                kv[0] to kv[1]
+            } else {
+                kv[0] to true
+            }
+        }
+        val options = Options(
+            context_type = parameters["context_type"] as String?
+        )
+
         val packageName = serviceJavaPackage(file)
         val packageFileName = javaPackageToDir(packageName)
         for (service in file.services) {
             val filename = packageFileName + serviceClassName(service) + ".java"
             val output = StringWriter()
-            generateService(service, output)
+            generateService(service, output, options)
             generatorContext.write(filename, output.toString())
         }
     }
 
-    fun generateService(service: Descriptors.ServiceDescriptor, out: Writer) {
+    fun generateService(service: Descriptors.ServiceDescriptor, out: Writer, options: Options) {
         val printer = Printer(out)
         val packageName = serviceJavaPackage(service.file)
         if (packageName.isNotEmpty()) {
@@ -33,14 +49,19 @@ class SpringWebGenerator : CodeGenerator() {
         printer.print("public final class ${serviceClassName(service)} {\n\n")
         printer.indent()
 
-        generateInterface(printer, service, reactive = false)
-        generateInterface(printer, service, reactive = true)
+        generateInterface(printer, options, service, reactive = false)
+        generateInterface(printer, options, service, reactive = true)
 
         printer.outdent()
         printer.print("}\n")
     }
 
-    fun generateInterface(printer: Printer, service: Descriptors.ServiceDescriptor, reactive: Boolean) {
+    fun generateInterface(
+        printer: Printer,
+        options: Options,
+        service: Descriptors.ServiceDescriptor,
+        reactive: Boolean
+    ) {
         val interfaceName = if (reactive) {
             "ReactiveController"
         } else {
@@ -63,7 +84,15 @@ class SpringWebGenerator : CodeGenerator() {
                 "/${service.fullName}/${method.name}"
             }
             printer.print("\n@org.springframework.web.bind.annotation.PostMapping(\"$path\")\n")
-            printer.print("$outputType $lowerMethodName(@org.springframework.web.bind.annotation.RequestBody @org.springframework.lang.NonNull $inputType request);\n")
+            val contextParameter = if (options.context_type != null) {
+                ", @org.springframework.lang.NonNull ${options.context_type} context"
+            } else {
+                ""
+            }
+            printer.print("$outputType $lowerMethodName(" +
+                "@org.springframework.web.bind.annotation.RequestBody @org.springframework.lang.NonNull $inputType request" +
+                contextParameter +
+                ");\n")
         }
         printer.outdent()
         printer.print("}\n\n")

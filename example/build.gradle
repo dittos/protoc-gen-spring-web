@@ -36,6 +36,7 @@ protobuf {
         all()*.plugins {
             spring_web {
                 outputSubDir = 'java'
+                option "context_type=javax.servlet.http.HttpServletRequest"
             }
         }
         all().each { task ->
